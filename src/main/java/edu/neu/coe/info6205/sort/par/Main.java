@@ -18,44 +18,58 @@ public class Main {
 
     public static void main(String[] args) {
         processArgs(args);
-        System.out.println("Degree of parallelism: " + ForkJoinPool.getCommonPoolParallelism());
-        Random random = new Random();
-        int[] array = new int[2000000];
-        ArrayList<Long> timeList = new ArrayList<>();
-        for (int j = 50; j < 100; j++) {
-            ParSort.cutoff = 10000 * (j + 1);
-            // for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-            long time;
-            long startTime = System.currentTimeMillis();
-            for (int t = 0; t < 10; t++) {
-                for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-                ParSort.sort(array, 0, array.length);
+        int[] thd= {2,4,8,16,32};
+        int[] arrSize= {2000000,3000000,4000000,5000000};
+//        int[] cutoff= {1000000,1500000, 2000000,2500000};
+//        System.out.println("Degree of parallelism: " + ForkJoinPool.getCommonPoolParallelism());
+//        for(int size:arrSize) {
+//        	for(int a:thd) {
+                Random random = new Random();
+                int[] array = new int[4000000];
+//              ParSort.myPool = new ForkJoinPool(a);
+                ParSort.myPool = new ForkJoinPool(configuration.getOrDefault("-n", 16));
+        		System.out.println("Degree of parallelism: " + ParSort.myPool.getParallelism());
+        		System.out.println("Array Size: " + array.length);
+                ArrayList<Long> timeList = new ArrayList<>();
+//                for (int j = 50; j < 100; j++) {
+//                    ParSort.cutoff = 10000 * (j + 1);
+                    // for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
+                    ParSort.cutoff = 2500000;
+                    long time;
+                    long startTime = System.currentTimeMillis();
+                    for (int t = 0; t < 10; t++) {
+                        for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
+                        ParSort.sort(array, 0, array.length);
+                    }
+                    long endTime = System.currentTimeMillis();
+                    time = (endTime - startTime);
+                    timeList.add(time);
+
+
+                    System.out.println("cutoff：" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
+
+//                }
+                try {
+                    FileOutputStream fis = new FileOutputStream("./src/result.csv");
+                    OutputStreamWriter isr = new OutputStreamWriter(fis);
+                    BufferedWriter bw = new BufferedWriter(isr);
+                    int j = 0;
+                    for (long i : timeList) {
+                        String content = (double) 10000 * (j + 1) / 2000000 + "," + (double) i / 10 + "\n";
+                        j++;
+                        bw.write(content);
+                        bw.flush();
+                    }
+                    bw.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            long endTime = System.currentTimeMillis();
-            time = (endTime - startTime);
-            timeList.add(time);
-
-
-            System.out.println("cutoff：" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
-
-        }
-        try {
-            FileOutputStream fis = new FileOutputStream("./src/result.csv");
-            OutputStreamWriter isr = new OutputStreamWriter(fis);
-            BufferedWriter bw = new BufferedWriter(isr);
-            int j = 0;
-            for (long i : timeList) {
-                String content = (double) 10000 * (j + 1) / 2000000 + "," + (double) i / 10 + "\n";
-                j++;
-                bw.write(content);
-                bw.flush();
-            }
-            bw.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//            System.out.println();
+//        }
+//        System.out.println();
+//    }
 
     private static void processArgs(String[] args) {
         String[] xs = args;
